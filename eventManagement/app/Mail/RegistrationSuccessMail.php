@@ -3,22 +3,26 @@
 namespace App\Mail;
 
 use App\Models\Event;
+use App\Models\Registration;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class RegistrationSuccessMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $event;
+    public $registration;
 
-    public function __construct(Event $event)
+    public function __construct(Registration $registration,Event $event)
     {
         $this->event = $event;
+        $this->registration= $registration;
     }
 
     /**
@@ -40,10 +44,12 @@ class RegistrationSuccessMail extends Mailable
      */
     public function content()
     {
+        $qrData = route('checkin.qr', ['id' => $this->registration->id]);
         return new Content(
             markdown: 'emails.registration_success',
             with: [
                 'event' => $this->event,
+                'qr' => base64_encode(QrCode::format('png')->size(200)->generate($qrData)),
             ]
         );
     }

@@ -32,26 +32,36 @@ class RegistrationController extends Controller
             'status' => 'registered',
         ]);
 
-        Mail::to($user->email)->send(new RegistrationSuccessMail($event));
+        Mail::to($user->email)->send(new RegistrationSuccessMail($registration,$event));
 
         return response()->json(['message' => 'Đăng ký thành công!', 'registration' => $registration], 201);
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy(Request $request, $eventId)
     {
         $user = $request->user();
 
-        $registration = Registration::where('id', $id)
-            ->where('user_id', $user->id)
+        // Tìm sự kiện
+        $event = Event::findOrFail($eventId);
+
+        // Tìm bản đăng ký
+        $registration = Registration::where('user_id', $user->id)
+            ->where('event_id', $event->id)
             ->first();
 
-        if (!$registration) {
-            return response()->json(['message' => 'Không tìm thấy đăng ký.'], 404);
+        if (! $registration) {
+            return response()->json(['message' => 'Bạn chưa đăng ký sự kiện này.'], 404);
         }
 
-        $registration->delete(); // dùng soft delete
+        if ($registration->checked_in_at) {
+            return response()->json(['message' => 'Bạn đã điểm danh, không thể hủy đăng ký.'], 400);
+        }
 
-        return response()->json(['message' => 'Huỷ đăng ký thành công.']);
+        // Hủy đăng ký bằng soft delete
+        $registration->delete();
+
+        return response()->json(['message' => 'Hủy đăng ký thành công.']);
     }
+
 
 }
