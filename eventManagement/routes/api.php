@@ -1,8 +1,11 @@
 <?php
 
+use App\Exports\RegistrationsExport;
 use App\Http\Controllers\Api\Admin\CheckinController;
+use App\Http\Controllers\Api\Admin\StatisticsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Maatwebsite\Excel\Facades\Excel;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +30,13 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 
     //route check in
     Route::post('/checkin/{id}', [CheckinController::class, 'checkin'])->name('checkin.qr');
+
+    //dowload file excel danh sách user tham gia 1 event
+    Route::get('/events/{event}/export', function ($eventId) {
+    return Excel::download(new RegistrationsExport($eventId), 'registrations.xlsx');});
+
+    //route thống kê
+    Route::get('/statistics', [StatisticsController::class, 'index']);
 });
 
 //user route
@@ -39,4 +49,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //hủy đăng ký sự kiện
     Route::delete('/events/{event}/cancel', [\App\Http\Controllers\Api\User\RegistrationController::class, 'destroy']);
+
+
 });

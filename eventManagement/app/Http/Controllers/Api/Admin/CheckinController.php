@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CheckedInNotification;
 use App\Models\Registration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class CheckinController extends Controller
 {
@@ -22,6 +24,8 @@ class CheckinController extends Controller
 
         $registration->checked_in_at = now();
         $registration->save();
+
+        Mail::to($registration->user->email)->send(new CheckedInNotification($registration));
 
         return response()->json([
             'message' => 'Check-in thành công!',
